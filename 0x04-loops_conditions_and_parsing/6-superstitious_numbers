@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # This bash script displays numbers from 1 to 20 and 
 # corresponding messages for specific iterations.
 
