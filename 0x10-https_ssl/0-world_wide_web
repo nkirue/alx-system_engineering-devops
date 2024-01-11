@@ -1,16 +1,44 @@
 #!/usr/bin/env bash
-#  Bash script that will display information about subdomains
+# Script to display information about subdomains of a domain
 
-disply_domain_subdomain () {
-    dig "$1" | grep -A1 'ANSWER SECTION:' | sed -r "s/$1./$2/g" | awk -F" " ' NR==2 { print "The subdomain " $1 " is a " $4 " record and points to " $5 }'
+get_record_info() {
+    local domain=$1
+    local subdomain=$2
+    local record_type=$3
+    local destination=$4
+    echo "The subdomain $subdomain is a $record_type record and points to $destination"
 }
 
-if [ "$#" -eq 2 ]
-then
-    disply_domain_subdomain "$2.$1" "$2"
-else
-    disply_domain_subdomain "www.$1" "www"
-    disply_domain_subdomain "lb-01.$1" "lb-01"
-    disply_domain_subdomain "web-01.$1" "web-01"
-    disply_domain_subdomain "web-02.$1" "web-02"
-fi
+audit_subdomain() {
+    local domain=$1
+    local subdomain=$2
+
+    dig_output=$(dig "$subdomain.$domain" | awk '/^;; ANSWER SECTION:$/,/^$/ {print}')
+    record_type=$(echo "$dig_output" | awk '$4 == "IN" {print $3}')
+    destination=$(echo "$dig_output" | awk '$4 == "A" {print $5}')
+
+    get_record_info "$domain" "$subdomain" "$record_type" "$destination"
+}
+
+audit_domain() {
+    local domain=$1
+    subdomains=("www" "lb-01" "web-01" "web-02")
+
+    for subdomain in "${subdomains[@]}"; do
+        audit_subdomain "$domain" "$subdomain"
+    done
+}
+
+main() {
+    local domain=$1
+    local subdomain=$2
+
+    if [ -z "$subdomain" ]; then
+        audit_domain "$domain"
+    else
+        audit_subdomain "$domain" "$subdomain"
+    fi
+}
+
+main "$@"
+
