@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# the ufw commands that was used
+# a script that sets up the firewall via ufw
 sudo ufw default deny incoming
 sudo ufw allow 22/tcp
 sudo ufw allow 443/tcp
